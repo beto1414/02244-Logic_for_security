@@ -1,0 +1,34 @@
+Protocol: SSOfinal
+
+Types:  
+        Agent App,Server,idp;
+        Symmetric_key KAS;
+        Function pk, pw;
+        Number ID,NA,NS,Ni,Access;
+        
+Knowledge:
+        App: App,Server,idp,pk(Server),pk(idp),pw(App,idp),sk(App,idp);
+        Server: App,Server,idp,pk(Server),inv(pk(Server)),pk(idp),sk(Server,idp);
+        idp: idp,App,Server,pk(idp),inv(pk(idp)),pk(Server),pw(App,idp),sk(App,idp),sk(Server,idp);
+        where App!=Server,App!=idp,Server!=idp
+
+Actions:
+        App->Server: {App,Server,NA,KAS,ID}pk(Server)
+
+        Server->idp: {|App,Server,NA,NS|}sk(Server,idp)
+
+        idp->App: {|App,Server,NA,NS,Ni|}sk(App,idp)
+        App->idp: {|App,Server,NA,NS,Ni,pw(App,idp),ID|}sk(App,idp)
+        idp->App: {|{App,Server,ID,NA,NS,Ni}inv(pk(idp))|}sk(App,idp)
+
+        App->Server: {|{App,Server,ID,NA,NS,Ni}inv(pk(idp))|}KAS
+        Server->App: {|App,Server,Access,ID|}KAS
+
+Goals:
+        Server authenticates App on ID
+        App authenticates Server on Access
+        Access secret between App,Server
+        KAS secret between App,Server
+        ID secret between App,Server
+        idp authenticates App on pw(App,idp),ID
+        pw(App,idp) guessable secret between App,idp

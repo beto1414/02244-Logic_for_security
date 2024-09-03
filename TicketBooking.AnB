@@ -1,0 +1,32 @@
+Protocol: TicketBooking
+
+Types: 
+Agent App,Server,danskeBank,idp;
+Number ID,Ni,NA,NS,Price,TicketID,Payment;
+
+Knowledge:
+App: App,Server,idp,pk(idp),pk(danskeBank),sk(App, Server),sk(App,idp),sk(App,danskeBank);
+Server: App,Server,idp,pk(idp),pk(danskeBank),sk(App, Server);
+danskeBank: App,Server,danskeBank,pk(danskeBank),pk(idp),inv(pk(danskeBank)),mobilePay(App, danskeBank),sk(App, danskeBank);
+idp: App,Server,idp,pk(idp),pk(danskeBank),sk(App,idp),inv(pk(idp)),inv(pk(danskeBank));
+where App!=Server,App!=danskeBank,Server!=danskeBank
+
+Actions:
+idp *->* App: {|{App,Server,Ni,ID}inv(pk(idp))|}sk(App,idp)
+
+App->Server: {|TicketID,NA,{App,Server,Ni,ID}inv(pk(idp))|}sk(App,Server)
+Server->App: {|App,Server,TicketID,Price,Ni,NA,NS|}sk(App, Server)
+
+App->idp: {Payment,Price,NA,NS,{App,Server,Ni,ID}inv(pk(idp))}pk(idp)
+
+idp->danskeBank: {{App,Payment,Server,Ni,ID}inv(pk(danskeBank))}pk(danskeBank)
+danskeBank->idp: {{App,Server,Ni,ID}inv(pk(danskeBank))}pk(idp)
+
+idp->App: {|NA, {App,Server,Ni,Price}inv(pk(idp))|}sk(App,idp)
+
+App -> Server: {|App,Server,Ni,NA,TicketID,Price|}sk(App,Server)
+
+Goals: 
+Server authenticates App on ID, Price
+danskeBank authenticates App on ID, Payment
+Payment secret between App, danskeBank
